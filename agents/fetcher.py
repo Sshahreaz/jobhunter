@@ -10,6 +10,7 @@ from apis.jsearch import JSearchClient
 logger = logging.getLogger(__name__)
 
 SEEN_WINDOW_DAYS = 30
+_ALLOWED_TITLE_KEYWORDS = {"data analyst", "business data analyst"}
 # Sentinel for unparseable dates — sorts to the bottom
 _EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
@@ -86,6 +87,11 @@ class JobFetcher:
         unique: list[dict] = []
 
         for job in jobs:
+            # Title filter — only keep exact keyword matches
+            title = job.get("title", "").lower()
+            if not any(kw in title for kw in _ALLOWED_TITLE_KEYWORDS):
+                continue
+
             # Skip jobs we've already stored (by apply URL)
             apply_url = job.get("apply_url", "")
             if apply_url and apply_url in self._seen_ids:
